@@ -3,26 +3,235 @@
   "x-version": "1.0.0",
   "name": "opentitan-hmac",
   "version": "0.1.0",
-  "description": "HMAC/SHA-2 hash accelerator supporting SHA-256, SHA-384, and SHA-512 with configurable digest size, HMAC key support, message FIFO, and 3 interrupt sources. TileLink-UL slave. Extracted from OpenTitan (lowRISC).",
+  "description": "A hardware implementation of HMAC (Hash-based Message Authentication Code) supporting SHA algorithms, designed for secure cryptographic operations in silicon Root of Trust applications.",
   "license": "Apache-2.0",
   "maturity": "production",
-  "target": ["asic", "fpga"],
-  "design_type": ["digital"],
-  "created": "2026-02-19T06:12:02Z",
-  "updated": "2026-03-27T19:30:00Z",
-  "source": {"type": "git", "url": "https://github.com/lowRISC/opentitan", "commit": "304378684dfcf5be73bbd14faffa71790793d8c6", "ip_path": "hw/ip/hmac", "private": false, "rtl_path": "rtl"},
-  "maintainers": [{"name": "Vyges", "email": "team@vyges.com", "github": "vyges"}],
-  "interfaces": [
-    {"type": "bus", "direction": "slave", "protocol": "TL-UL", "port": "tl", "width": 32, "description": "TileLink-UL slave. 59 registers."}
+  "target": [
+    "asic",
+    "fpga"
   ],
-  "architecture": {"type": "peripheral", "features": ["SHA-256, SHA-384, SHA-512 hash computation", "HMAC (keyed hash) with configurable key", "Message FIFO for streaming data input", "3 interrupts: hmac_done, fifo_empty, hmac_err", "59 configuration/status registers", "Bus integrity alert"]},
-  "dependencies": [{"name": "opentitan-prim", "type": "library"}, {"name": "opentitan-tlul", "type": "bus"}],
-  "documentation": {"upstream": "https://opentitan.org/book/hw/ip/hmac/"},
-  "artifacts": {"total_rtl_lines": 4620},
-  "categories": {"primary": "security", "secondary": ["crypto"], "tags": ["hmac", "opentitan", "tl-ul", "crypto"]},
-  "trust": {"verification_level": "silicon_proven", "tapeout_count": 3, "fpga_validated": false, "maintained": true, "last_activity": "2026-03-27"},
-  "asic": {"flavor": "digital", "technology": ["sky130A"]},
-  "fpga": {"toolchain": ["Vivado", "Yosys"]},
-  "keywords": ["hmac", "opentitan", "crypto", "tl-ul"],
-  "meta": {"template": {"generator": "manual (gold-standard pass 2026-03-27)"}, "schema": {"version": "1.0.0"}}
+  "design_type": [
+    "digital"
+  ],
+  "created": "2026-03-27T23:05:10Z",
+  "updated": "2026-03-27T23:05:10Z",
+  "source": {
+    "type": "git",
+    "url": "https://github.com/lowRISC/opentitan",
+    "commit": "7fbd85829ec6354ef6497df69536cefe862c1f5a",
+    "ip_path": "hw/ip/hmac",
+    "private": false,
+    "containsEncryptedPayload": false,
+    "indexing": true
+  },
+  "maintainers": [
+    {
+      "name": "Vyges",
+      "email": "team@vyges.com",
+      "url": "https://vyges.com",
+      "github": "vyges"
+    }
+  ],
+  "interfaces": [
+    {
+      "type": "bus",
+      "direction": "slave",
+      "protocol": "TL-UL",
+      "port": "tl_i",
+      "width": 32,
+      "description": "Incoming TL-UL bus interface for HMAC operations."
+    },
+    {
+      "type": "bus",
+      "direction": "master",
+      "protocol": "TL-UL",
+      "port": "tl_o",
+      "width": 32,
+      "description": "Outgoing TL-UL bus interface for HMAC responses."
+    },
+    {
+      "type": "bus",
+      "direction": "master",
+      "protocol": "TL-UL",
+      "port": "tl_win_o",
+      "width": 32,
+      "description": "Windowed TL-UL bus interface for additional operations."
+    },
+    {
+      "type": "bus",
+      "direction": "slave",
+      "protocol": "TL-UL",
+      "port": "tl_win_i",
+      "width": 32,
+      "description": "Windowed TL-UL bus interface for incoming data."
+    },
+    {
+      "type": "clock",
+      "direction": "input",
+      "port": "clk_i",
+      "width": 1,
+      "description": "Clock input for synchronous operations."
+    },
+    {
+      "type": "reset",
+      "direction": "input",
+      "port": "rst_ni",
+      "width": 1,
+      "description": "Active-low reset input."
+    },
+    {
+      "type": "interrupt",
+      "direction": "output",
+      "port": "intg_err_o",
+      "width": 1,
+      "description": "Integrity error interrupt output."
+    }
+  ],
+  "parameters": [
+    {
+      "name": "AW",
+      "type": "int",
+      "default": 13,
+      "description": "Address width for register addressing."
+    },
+    {
+      "name": "DW",
+      "type": "int",
+      "default": 32,
+      "description": "Data width for register operations."
+    },
+    {
+      "name": "DBW",
+      "type": "int",
+      "default": 4,
+      "description": "Byte width derived from data width."
+    },
+    {
+      "name": "NumDigestWords",
+      "type": "int",
+      "default": 16,
+      "description": "Number of words in the digest."
+    },
+    {
+      "name": "NumKeyWords",
+      "type": "int",
+      "default": 32,
+      "description": "Number of words in the key."
+    },
+    {
+      "name": "NumAlerts",
+      "type": "int",
+      "default": 1,
+      "description": "Number of alert signals supported."
+    },
+    {
+      "name": "BlockAw",
+      "type": "int",
+      "default": 13,
+      "description": "Address width within the block."
+    },
+    {
+      "name": "NumRegs",
+      "type": "int",
+      "default": 59,
+      "description": "Number of registers in the block."
+    }
+  ],
+  "performance": {},
+  "architecture": {
+    "type": "peripheral",
+    "features": [
+      "HMAC computation using SHA algorithms",
+      "Register-based configuration and control",
+      "Integrity error detection and reporting",
+      "Support for windowed operations"
+    ]
+  },
+  "asic": {
+    "flavor": "digital",
+    "technology": [
+      "sky130A"
+    ]
+  },
+  "fpga": {
+    "toolchain": [
+      "Vivado"
+    ],
+    "devices": [
+      "Artix-7"
+    ]
+  },
+  "dependencies": [
+    {
+      "name": "tlul_pkg",
+      "type": "library",
+      "description": "TL-UL protocol package for bus operations."
+    },
+    {
+      "name": "hmac_reg_pkg",
+      "type": "library",
+      "description": "Package containing register definitions and data structures."
+    },
+    {
+      "name": "prim_reg_we_check",
+      "type": "library",
+      "description": "Primitive for write enable error checking."
+    },
+    {
+      "name": "tlul_socket_1n",
+      "type": "library",
+      "description": "Socket for TL-UL bus multiplexing."
+    },
+    {
+      "name": "tlul_adapter_reg",
+      "type": "library",
+      "description": "Adapter for TL-UL register interface."
+    }
+  ],
+  "test": {
+    "testbenches": [
+      "tb_hmac",
+      "tb_hmac_core"
+    ],
+    "status": "upstream_passing",
+    "coverage": "functional"
+  },
+  "documentation": {
+    "upstream": "https://opentitan.org/book/"
+  },
+  "artifacts": {
+    "total_rtl_lines": 4620
+  },
+  "categories": [
+    {
+      "main_category": "Security IP",
+      "sub_category": "Crypto Engines"
+    }
+  ],
+  "keywords": [
+    "HMAC",
+    "SHA",
+    "cryptography",
+    "security",
+    "OpenTitan",
+    "Root of Trust"
+  ],
+  "trust": {
+    "verification_level": "silicon_proven",
+    "tapeout_count": 0,
+    "fpga_validated": false,
+    "formal_verified": false,
+    "maintained": true,
+    "last_activity": "2026-03-27T23:05:10Z"
+  },
+  "meta": {
+    "template": {
+      "generator": "github-models-ai",
+      "template_version": "1.0.0",
+      "generated_at": "2026-03-27T23:05:10Z"
+    },
+    "schema": {
+      "version": "1.0.0"
+    }
+  }
 }
