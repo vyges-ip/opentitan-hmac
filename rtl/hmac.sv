@@ -23,8 +23,8 @@ module hmac
   input  prim_alert_pkg::alert_rx_t [NumAlerts-1:0] alert_rx_i,
   output prim_alert_pkg::alert_tx_t [NumAlerts-1:0] alert_tx_o,
 
-  // Key manager (keymgr) key sideload interface
-  input  keymgr_pkg::hw_key_req_t keymgr_key_i,
+  // Key manager (keymgr_dpe) key sideload interface
+  input  keymgr_dpe_pkg::hw_key_req_t keymgr_key_i,
 
   output logic intr_hmac_done_o,
   output logic intr_fifo_empty_o,
@@ -34,8 +34,8 @@ module hmac
 );
 
   // TODO(#31026): Consume the key from the keymgr_dpe
-  localparam int NumInBufBits = $bits(keymgr_pkg::hw_key_req_t);
-  keymgr_pkg::hw_key_req_t unused_key;
+  localparam int NumInBufBits = $bits(keymgr_dpe_pkg::hw_key_req_t);
+  keymgr_dpe_pkg::hw_key_req_t unused_key;
   prim_buf #(
     .Width  (NumInBufBits)
   ) u_anchor_buf (
@@ -956,9 +956,11 @@ module hmac
   // All outputs should be known value after reset
   `ASSERT_KNOWN(IntrHmacDoneOKnown, intr_hmac_done_o)
   `ASSERT_KNOWN(IntrFifoEmptyOKnown, intr_fifo_empty_o)
+  `ASSERT_KNOWN(IntrHmacErrOKnown, intr_hmac_err_o)
   `ASSERT_KNOWN(TlODValidKnown, tl_o.d_valid)
   `ASSERT_KNOWN(TlOAReadyKnown, tl_o.a_ready)
   `ASSERT_KNOWN(AlertKnownO_A, alert_tx_o)
+  `ASSERT_KNOWN(IdleKnown, idle_o)
 
 `endif // SYNTHESIS
 `endif // VERILATOR
